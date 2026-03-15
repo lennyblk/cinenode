@@ -225,4 +225,4 @@ Sarah GARCIA
 Lenny BLACKETT
 Malo LAVAL
 
-Project built as part of the **ESGI** curriculum.
+Project built as part of the [**ESGI**](https://www.esgi.fr/) curriculum.
