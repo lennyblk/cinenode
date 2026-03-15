@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { RefreshToken } from 'src/users/entities/refresh-token.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -10,5 +11,5 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME ?? 'cinenode',
   synchronize: true,
   logging: true,
-  entities: [User],
+  entities: [User, RefreshToken],
 });
