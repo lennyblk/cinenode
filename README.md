@@ -68,8 +68,8 @@ Copy `.env.example` and fill in the values:
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
 DATABASE_NAME=cinenode
-DATABASE_USER=postgres
-DATABASE_PASSWORD=
+DATABASE_USER=cinenode
+DATABASE_PASSWORD=cinenode
 
 # JWT
 JWT_SECRET=
