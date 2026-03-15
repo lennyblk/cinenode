@@ -24,9 +24,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
   async create(createUserDto: CreateUserDto) {
-    console.log(createUserDto);
     if ((await this.findByEmail(createUserDto.email)) !== null) {
-      console.log(await this.findByEmail(createUserDto.email));
       return {
         message: `User with email ${createUserDto.email} already exists`,
       };
