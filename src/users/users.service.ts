@@ -20,7 +20,17 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  create(createUserDto: CreateUserDto) {
+  findByEmail(email: string) {
+    return this.usersRepository.findOne({ where: { email } });
+  }
+  async create(createUserDto: CreateUserDto) {
+    console.log(createUserDto);
+    if ((await this.findByEmail(createUserDto.email)) !== null) {
+      console.log(await this.findByEmail(createUserDto.email));
+      return {
+        message: `User with email ${createUserDto.email} already exists`,
+      };
+    }
     const user = this.usersRepository.create(createUserDto);
     return this.usersRepository.save(user);
   }
@@ -28,5 +38,13 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.usersRepository.update(id, updateUserDto);
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async delete(id: string) {
+    const userDeleted = await this.usersRepository.delete(id);
+    if (userDeleted.affected === 0) {
+      return { message: `User with id ${id} not found` };
+    }
+    return { message: `User with id ${id} has been deleted` };
   }
 }
