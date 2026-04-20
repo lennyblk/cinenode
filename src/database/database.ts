@@ -1,6 +1,9 @@
 import { DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { RefreshToken } from 'src/users/entities/refresh-token.entity';
+import { Room } from '../rooms/entities/room.entity';
+import { Movie } from '../movies/entities/movie.entity';
+import { Screening } from '../screenings/entities/screening.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -11,5 +14,5 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME ?? 'cinenode',
   synchronize: true,
   logging: true,
-  entities: [User, RefreshToken],
+  entities: [User, RefreshToken, Room, Movie, Screening],
 });
