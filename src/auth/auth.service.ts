@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  ForbiddenException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +10,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthDto } from './dto/auth.dto';
 import { User } from '../users/entities/user.entity';
+import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { Tokens } from './types';
 
 @Injectable()
@@ -16,6 +18,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
   ) {}
 
@@ -37,13 +41,26 @@ export class AuthService {
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: 'AtStrategy',
-        expiresIn: '15m',
+        expiresIn: '5m',
       }),
       this.jwtService.signAsync(payload, {
         secret: 'RtStrategy',
         expiresIn: '7d',
       }),
     ]);
+
+    // sauvegarde le refresh token en DB
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await this.refreshTokenRepository.save(
+      this.refreshTokenRepository.create({
+        token: refresh_token,
+        userId,
+        expiresAt,
+        isRevoked: false,
+      }),
+    );
 
     return { access_token, refresh_token };
   }
@@ -77,6 +94,38 @@ export class AuthService {
     return this.getTokens(user.id, user.email);
   }
 
-  logout() {}
-  refreshToken() {}
+  async logout(userId: string): Promise<void> {
+    await this.refreshTokenRepository.update(
+      { userId, isRevoked: false },
+      { isRevoked: true },
+    );
+  }
+
+  async refreshToken(
+    userId: string,
+    email: string,
+    refreshToken: string,
+  ): Promise<Tokens> {
+    const tokenInDb = await this.refreshTokenRepository.findOne({
+      where: { userId, token: refreshToken },
+    });
+
+    if (!tokenInDb) {
+      throw new ForbiddenException('Access denid');
+    }
+
+    if (tokenInDb.isRevoked) {
+      throw new ForbiddenException('Access denid');
+    }
+
+    if (tokenInDb.expiresAt < new Date()) {
+      throw new ForbiddenException('Access denid');
+    }
+
+    await this.refreshTokenRepository.update(tokenInDb.id, {
+      isRevoked: true,
+    });
+
+    return this.getTokens(userId, email);
+  }
 }
