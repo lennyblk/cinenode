@@ -9,11 +9,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ScreeningsService } from './screenings.service';
 import { CreateScreeningDto } from './dto/create-screening.dto';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('screenings')
 export class ScreeningsController {
   constructor(private readonly screeningsService: ScreeningsService) {}

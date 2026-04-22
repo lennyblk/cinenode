@@ -9,11 +9,14 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('movies')
 export class MoviesController {
   constructor(private readonly moviesService: MoviesService) {}
