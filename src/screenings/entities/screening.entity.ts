@@ -4,11 +4,13 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { Room } from '../../rooms/entities/room.entity';
 import { Movie } from '../../movies/entities/movie.entity';
+import { Ticket } from '../../tickets/entities/ticket.entity';
 
 @Entity('screenings')
 export class Screening {
@@ -37,6 +39,9 @@ export class Screening {
 
   @Column({ default: false })
   isCancelled: boolean;
+
+  @ManyToMany(() => Ticket, (ticket) => ticket.screenings)
+  tickets: Ticket[];
 
   @CreateDateColumn()
   createdAt: Date;

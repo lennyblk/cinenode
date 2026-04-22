@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { MoviesModule } from './movies/movies.module';
 import { ScreeningsModule } from './screenings/screenings.module';
+import { WalletsModule } from './wallets/wallets.module';
+import { TicketsModule } from './tickets/tickets.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { ScreeningsModule } from './screenings/screenings.module';
     RoomsModule,
     MoviesModule,
     ScreeningsModule,
+    WalletsModule,
+    TicketsModule,
   ],
   controllers: [],
   providers: [],
