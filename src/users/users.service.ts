@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -42,7 +43,12 @@ export class UsersService {
       );
     }
 
-    const user = this.usersRepository.create(createUserDto);
+    const hash = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hash,
+      role: createUserDto.role ?? UserRole.CLIENT,
+    });
     return this.usersRepository.save(user);
   }
 

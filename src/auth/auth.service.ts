@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthDto } from './dto/auth.dto';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { Tokens } from './types';
 
@@ -35,13 +35,17 @@ export class AuthService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async getTokens(userId: string, email: string): Promise<Tokens> {
-    const payload = { userId, email };
+  async getTokens(
+    userId: string,
+    email: string,
+    role: UserRole,
+  ): Promise<Tokens> {
+    const payload = { userId, email, role };
 
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(payload, {
         secret: 'AtStrategy',
-        expiresIn: '5m',
+        expiresIn: role === UserRole.ADMIN ? '1y' : '5m',
       }),
       this.jwtService.signAsync(payload, {
         secret: 'RtStrategy',
@@ -77,7 +81,7 @@ export class AuthService {
       this.userRepository.create({ ...dto, password: hash }),
     );
 
-    return this.getTokens(newUser.id, newUser.email);
+    return this.getTokens(newUser.id, newUser.email, newUser.role);
   }
 
   async signin(dto: AuthDto): Promise<Tokens> {
@@ -91,7 +95,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.getTokens(user.id, user.email);
+    return this.getTokens(user.id, user.email, user.role);
   }
 
   async logout(userId: string): Promise<void> {
@@ -126,6 +130,10 @@ export class AuthService {
       isRevoked: true,
     });
 
-    return this.getTokens(userId, email);
+    // re fetch de user au cas ou ses roles ont changés
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new ForbiddenException('Access denied');
+
+    return this.getTokens(userId, email, user.role);
   }
 }
