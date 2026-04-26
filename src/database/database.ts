@@ -4,6 +4,9 @@ import { RefreshToken } from 'src/users/entities/refresh-token.entity';
 import { Room } from '../rooms/entities/room.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { Screening } from '../screenings/entities/screening.entity';
+import { Wallet } from '../wallets/entities/wallet.entity';
+import { Transaction } from '../wallets/entities/transaction.entity';
+import { Ticket } from '../tickets/entities/ticket.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -14,5 +17,5 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME ?? 'cinenode',
   synchronize: true,
   logging: true,
-  entities: [User, RefreshToken, Room, Movie, Screening],
+  entities: [User, RefreshToken, Room, Movie, Screening, Wallet, Transaction, Ticket],
 });

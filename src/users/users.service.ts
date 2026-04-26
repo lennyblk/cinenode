@@ -8,12 +8,14 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    private walletsService: WalletsService,
   ) {}
 
   async findAll() {
@@ -43,7 +45,11 @@ export class UsersService {
     }
 
     const user = this.usersRepository.create(createUserDto);
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    await this.walletsService.create({ userId: savedUser.id });
+
+    return savedUser;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
