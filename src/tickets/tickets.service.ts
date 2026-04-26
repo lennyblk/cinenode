@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -25,10 +26,24 @@ export class TicketsService {
     private walletsService: WalletsService,
   ) {}
 
-  async create(userId: string, buyTicketDto: BuyTicketDto) {
-    // Vérifier que la séance existe
+async create(userId: string, buyTicketDto: BuyTicketDto) {
+  const wallet = await this.walletsService.findByUserId(userId);
+  const ticketPrice = TICKET_PRICES[buyTicketDto.type];
+
+  if (parseFloat(wallet.balance.toString()) < ticketPrice) {
+    throw new BadRequestException(
+      `Insufficient balance. You need ${ticketPrice}€ but have ${wallet.balance}€`,
+    );
+  }
+
+  if (buyTicketDto.type === TicketType.CLASSIC) {
+    if (!buyTicketDto.screeningId) {
+      throw new BadRequestException('screeningId is required for classic tickets');
+    }
+    
     const screening = await this.screeningsRepository.findOne({
       where: { id: buyTicketDto.screeningId },
+      relations: ['room'],
     });
     if (!screening) {
       throw new NotFoundException(
@@ -40,13 +55,14 @@ export class TicketsService {
       throw new BadRequestException('This screening has been cancelled');
     }
 
-    const wallet = await this.walletsService.findByUserId(userId);
-    const ticketPrice = TICKET_PRICES[buyTicketDto.type];
+    const ticketsSold = await this.ticketsRepository
+      .createQueryBuilder('ticket')
+      .leftJoin('ticket.screenings', 'screening')
+      .where('screening.id = :screeningId', { screeningId: buyTicketDto.screeningId })
+      .getCount();
 
-    if (parseFloat(wallet.balance.toString()) < ticketPrice) {
-      throw new BadRequestException(
-        `Insufficient balance. You need ${ticketPrice}€ but have ${wallet.balance}€`,
-      );
+    if (ticketsSold >= screening.room.capacity) {
+      throw new BadRequestException('No seats available for this screening');
     }
 
     const ticket = this.ticketsRepository.create({
@@ -56,15 +72,72 @@ export class TicketsService {
     });
 
     const savedTicket = await this.ticketsRepository.save(ticket);
-
     await this.walletsService.deductBalance(
       wallet.id,
       ticketPrice,
       `Purchase of ${buyTicketDto.type} ticket for screening ${screening.id}`,
     );
+    return savedTicket;
+  } 
 
+  else {
+    const ticket = this.ticketsRepository.create({
+      userId,
+      type: buyTicketDto.type,
+      screenings: [],
+    });
+
+    const savedTicket = await this.ticketsRepository.save(ticket);
+    await this.walletsService.deductBalance(
+      wallet.id,
+      ticketPrice,
+      `Purchase of ${buyTicketDto.type} ticket`,
+    );
     return savedTicket;
   }
+}
+
+async linkSuperTicketToScreening(ticketId: string, screeningId: string, userId: string) {
+  const ticket = await this.findOne(ticketId);
+  
+  if (ticket.userId !== userId) {
+    throw new ForbiddenException('You can only link your own tickets');
+  }
+  
+  if (ticket.type !== TicketType.SUPER) {
+    throw new BadRequestException('Only super tickets can be linked to screenings');
+  }
+
+  const screening = await this.screeningsRepository.findOne({
+    where: { id: screeningId },
+    relations: ['room'],
+  });
+  if (!screening) {
+    throw new NotFoundException(`Screening with id ${screeningId} not found`);
+  }
+
+  if (screening.isCancelled) {
+    throw new BadRequestException('This screening has been cancelled');
+  }
+
+  const isAlreadyLinked = ticket.screenings.some(s => s.id === screeningId);
+  if (isAlreadyLinked) {
+    throw new BadRequestException('This ticket is already linked to this screening');
+  }
+
+  const ticketsSold = await this.ticketsRepository
+    .createQueryBuilder('ticket')
+    .leftJoin('ticket.screenings', 'screening')
+    .where('screening.id = :screeningId', { screeningId })
+    .getCount();
+
+  if (ticketsSold >= screening.room.capacity) {
+    throw new BadRequestException('No seats available for this screening');
+  }
+
+  ticket.screenings.push(screening);
+  return this.ticketsRepository.save(ticket);
+}
 
   async findAll() {
     const tickets = await this.ticketsRepository.find({

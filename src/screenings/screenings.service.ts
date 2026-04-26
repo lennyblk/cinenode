@@ -11,6 +11,7 @@ import { CreateScreeningDto } from './dto/create-screening.dto';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
 import { Room } from '../rooms/entities/room.entity';
 import { Movie } from '../movies/entities/movie.entity';
+import { Ticket } from '../tickets/entities/ticket.entity';
 
 @Injectable()
 export class ScreeningsService {
@@ -21,25 +22,38 @@ export class ScreeningsService {
     private readonly roomsRepository: Repository<Room>,
     @InjectRepository(Movie)
     private readonly moviesRepository: Repository<Movie>,
+    @InjectRepository(Ticket)
+    private readonly ticketsRepository: Repository<Ticket>,
   ) {}
 
   findAll(from?: string, to?: string) {
-    const query = this.screeningsRepository
-      .createQueryBuilder('screening')
-      .leftJoinAndSelect('screening.room', 'room')
-      .leftJoinAndSelect('screening.movie', 'movie')
-      .orderBy('screening.startsAt', 'ASC');
+  const query = this.screeningsRepository
+    .createQueryBuilder('screening')
+    .leftJoinAndSelect('screening.room', 'room')
+    .leftJoinAndSelect('screening.movie', 'movie')
+    .leftJoin('screening.tickets', 'ticket')
+    .addSelect('COUNT(DISTINCT ticket.id)', 'ticketsSold')
+    .groupBy('screening.id')
+    .addGroupBy('room.id')
+    .addGroupBy('movie.id')
+    .orderBy('screening.startsAt', 'ASC');
 
-    if (from) {
-      query.andWhere('screening.startsAt >= :from', { from });
-    }
-
-    if (to) {
-      query.andWhere('screening.endsAt <= :to', { to });
-    }
-
-    return query.getMany();
+  if (from) {
+    query.andWhere('screening.startsAt >= :from', { from });
   }
+
+  if (to) {
+    query.andWhere('screening.endsAt <= :to', { to });
+  }
+
+  return query.getRawAndEntities().then(result => {
+    return result.entities.map((screening, index) => ({
+      ...screening,
+      ticketsSold: parseInt(result.raw[index].ticketsSold) || 0,
+      availableSeats: screening.room.capacity - (parseInt(result.raw[index].ticketsSold) || 0),
+    }));
+  });
+}
 
   async findOne(id: string) {
     const screening = await this.screeningsRepository.findOne({
@@ -51,8 +65,19 @@ export class ScreeningsService {
       throw new NotFoundException(`Screening with id ${id} not found`);
     }
 
-    return screening;
+    const ticketsSold = await this.ticketsRepository
+      .createQueryBuilder('ticket')
+      .leftJoin('ticket.screenings', 'screening')
+      .where('screening.id = :screeningId', { screeningId: id })
+      .getCount();
+
+    return {
+      ...screening,
+      ticketsSold,
+      availableSeats: screening.room.capacity - ticketsSold,
+    };
   }
+
 
   async create(createScreeningDto: CreateScreeningDto) {
     const room = await this.getActiveRoomOrThrow(createScreeningDto.roomId);
