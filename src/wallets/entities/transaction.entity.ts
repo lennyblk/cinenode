@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
   Column,
@@ -16,9 +17,11 @@ export enum TransactionType {
 
 @Entity('transactions')
 export class Transaction {
+  @ApiProperty({ example: 'uuid-v4' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({ example: 'uuid-du-wallet' })
   @Column()
   walletId: string;
 
@@ -28,18 +31,22 @@ export class Transaction {
   @JoinColumn({ name: 'walletId' })
   wallet: Wallet;
 
+  @ApiProperty({ enum: TransactionType, example: TransactionType.DEPOSIT })
   @Column({
     type: 'enum',
     enum: TransactionType,
   })
   type: TransactionType;
 
+  @ApiProperty({ example: 50.00 })
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
+  @ApiProperty({ example: 'Recharge de bienvenue', nullable: true })
   @Column({ nullable: true })
   description: string;
 
+  @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;
 }

@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
   Column,
@@ -18,9 +19,11 @@ export enum TicketType {
 
 @Entity('tickets')
 export class Ticket {
+  @ApiProperty({ example: 'uuid-v4' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({ example: 'uuid-de-l-utilisateur' })
   @Column()
   userId: string;
 
@@ -28,15 +31,18 @@ export class Ticket {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @ApiProperty({ enum: TicketType, example: TicketType.CLASSIC })
   @Column({
     type: 'enum',
     enum: TicketType,
   })
   type: TicketType;
 
+  @ApiProperty({ example: false })
   @Column({ default: false })
   isUsed: boolean;
 
+  @ApiProperty({ example: 0 })
   @Column({ type: 'int', default: 0 })
   usedCount: number;
 
@@ -50,9 +56,11 @@ export class Ticket {
   })
   screenings: Screening[];
 
+  @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;
 
+  @ApiProperty()
   @CreateDateColumn()
   usedAt: Date;
 }

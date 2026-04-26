@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
   Column,
@@ -13,9 +14,11 @@ import { Transaction } from './transaction.entity';
 
 @Entity('wallets')
 export class Wallet {
+  @ApiProperty({ example: 'uuid-v4' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({ example: 'uuid-de-l-utilisateur' })
   @Column()
   userId: string;
 
@@ -23,6 +26,7 @@ export class Wallet {
   @JoinColumn({ name: 'userId' })
   user: User;
 
+  @ApiProperty({ example: 100.50 })
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   balance: number;
 
@@ -31,9 +35,11 @@ export class Wallet {
   })
   transactions: Transaction[];
 
+  @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;
 
+  @ApiProperty()
   @UpdateDateColumn()
   updatedAt: Date;
 }

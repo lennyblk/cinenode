@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -10,25 +11,31 @@ import { User } from './user.entity';
 
 @Entity('refresh_tokens')
 export class RefreshToken {
+  @ApiProperty({ example: 'uuid-v4' })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' })
   @Column()
   token: string;
 
+  @ApiProperty()
   @Column()
   expiresAt: Date;
 
+  @ApiProperty({ example: false })
   @Column({ default: false })
   isRevoked: boolean;
 
-  @ManyToOne(() => User, { onDelete: 'CASCADE' }) //  'CASCADE' => si jamais on supp un user, ca supp tout ses refresh tokens
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
-  user: User; // ici on peut faire le lien directement avec tout l'objet car typeorm choisi automatiquement la primaryKey (qui est id)
+  user: User;
 
+  @ApiProperty({ example: 'uuid-de-l-utilisateur' })
   @Column()
   userId: string;
 
+  @ApiProperty()
   @CreateDateColumn()
   createdAt: Date;
 }

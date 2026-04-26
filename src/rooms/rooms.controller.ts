@@ -12,31 +12,38 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { ToggleMaintenanceDto } from './dto/toggle-maintenance.dto';
 
+@ApiTags('rooms')
+@ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
+  @ApiOperation({ summary: 'Lister toutes les salles' })
   @Get()
   findAll() {
     return this.roomsService.findAll();
   }
 
+  @ApiOperation({ summary: 'Récupérer une salle par ID' })
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.roomsService.findOne(id);
   }
 
+  @ApiOperation({ summary: 'Créer une salle' })
   @Post()
   create(@Body() createRoomDto: CreateRoomDto) {
     return this.roomsService.create(createRoomDto);
   }
 
+  @ApiOperation({ summary: 'Modifier une salle' })
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -45,11 +52,13 @@ export class RoomsController {
     return this.roomsService.update(id, updateRoomDto);
   }
 
+  @ApiOperation({ summary: 'Supprimer une salle' })
   @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.roomsService.remove(id);
   }
 
+  @ApiOperation({ summary: 'Activer/désactiver la maintenance d\'une salle' })
   @Patch(':id/maintenance')
   toggleMaintenance(
     @Param('id', ParseUUIDPipe) id: string,
@@ -61,6 +70,9 @@ export class RoomsController {
     );
   }
 
+  @ApiOperation({ summary: 'Programme d\'une salle entre deux dates' })
+  @ApiQuery({ name: 'from', required: true, example: '2026-01-01' })
+  @ApiQuery({ name: 'to', required: true, example: '2026-12-31' })
   @Get(':id/schedule')
   getSchedule(
     @Param('id', ParseUUIDPipe) id: string,
