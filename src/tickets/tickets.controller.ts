@@ -5,12 +5,17 @@ import {
   Post,
   Body,
   Delete,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from '@nestjs/passport';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { TicketsService } from './tickets.service';
 import { BuyTicketDto, UseTicketDto } from './dto';
+import { LinkTicketDto } from './dto/link-ticket.dto';
 
 @ApiTags('tickets')
+
 @Controller('tickets')
 export class TicketsController {
   constructor(private ticketsService: TicketsService) {}
@@ -64,5 +69,16 @@ export class TicketsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ticketsService.delete(id);
+  }
+
+
+  @ApiOperation({ summary: 'Lier un super ticket à une séance' })
+  @Post(':id/link-screening')
+  linkSuperTicket(
+    @Param('id') id: string,
+    @Body() linkTicketDto: LinkTicketDto,
+    @Req() req,
+  ) {
+    return this.ticketsService.linkSuperTicketToScreening(id, linkTicketDto.screeningId, req.user.userId);
   }
 }

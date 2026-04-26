@@ -12,6 +12,7 @@ import { AuthDto } from './dto/auth.dto';
 import { User } from '../users/entities/user.entity';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { Tokens } from './types';
+import { WalletsService } from '../wallets/wallets.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
     private jwtService: JwtService,
+    private walletsService: WalletsService,
   ) {}
 
   hashData(data: string) {
@@ -76,6 +78,8 @@ export class AuthService {
     const newUser = await this.userRepository.save(
       this.userRepository.create({ ...dto, password: hash }),
     );
+
+    await this.walletsService.create({ userId: newUser.id });
 
     return this.getTokens(newUser.id, newUser.email);
   }

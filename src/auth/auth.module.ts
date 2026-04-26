@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { RefreshToken } from 'src/users/entities/refresh-token.entity';
 import { AtStrategy } from './strategies';
 import { RtStrategy } from './strategies';
+import { WalletsModule } from '../wallets/wallets.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { RtStrategy } from './strategies';
       signOptions: { expiresIn: '5m' },
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    WalletsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, AtStrategy, RtStrategy],

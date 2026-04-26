@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsUUID } from 'class-validator';
 import { TicketType } from '../entities/ticket.entity';
 
 export class BuyTicketDto {
@@ -7,7 +7,8 @@ export class BuyTicketDto {
   @IsEnum(TicketType)
   type: TicketType;
 
-  @ApiProperty({ example: 'uuid-de-la-seance' })
+  @ApiPropertyOptional({ example: 'uuid-de-la-seance' })
+  @IsOptional()
   @IsUUID()
-  screeningId: string;
+  screeningId?: string;
 }
