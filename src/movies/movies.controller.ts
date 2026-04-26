@@ -5,14 +5,19 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -32,37 +37,16 @@ export class MoviesController {
 
   @ApiOperation({ summary: 'Récupérer un film par ID' })
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.moviesService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Créer un film' })
-  @Post()
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.moviesService.create(createMovieDto);
-  }
-
-  @ApiOperation({ summary: 'Modifier un film' })
-  @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateMovieDto: UpdateMovieDto,
-  ) {
-    return this.moviesService.update(id, updateMovieDto);
-  }
-
-  @ApiOperation({ summary: 'Supprimer un film' })
-  @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.moviesService.remove(id);
-  }
-
-  @ApiOperation({ summary: 'Programme d\'un film entre deux dates' })
+  @ApiOperation({ summary: "Programme d'un film entre deux dates" })
   @ApiQuery({ name: 'from', required: true, example: '2026-01-01' })
   @ApiQuery({ name: 'to', required: true, example: '2026-12-31' })
   @Get(':id/schedule')
   getSchedule(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Query('from') from: string,
     @Query('to') to: string,
   ) {
@@ -82,5 +66,26 @@ export class MoviesController {
     }
 
     return this.moviesService.getMovieSchedule(id, from, to);
+  }
+
+  @ApiOperation({ summary: 'Créer un film (admin)' })
+  @UseGuards(AdminGuard)
+  @Post()
+  create(@Body() createMovieDto: CreateMovieDto) {
+    return this.moviesService.create(createMovieDto);
+  }
+
+  @ApiOperation({ summary: 'Modifier un film (admin)' })
+  @UseGuards(AdminGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
+    return this.moviesService.update(id, updateMovieDto);
+  }
+
+  @ApiOperation({ summary: 'Supprimer un film (admin)' })
+  @UseGuards(AdminGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.moviesService.remove(id);
   }
 }

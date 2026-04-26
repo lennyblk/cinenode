@@ -5,14 +5,19 @@ import {
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { AdminGuard } from '../auth/guards/admin.guard';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
@@ -33,49 +38,16 @@ export class RoomsController {
 
   @ApiOperation({ summary: 'Récupérer une salle par ID' })
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id') id: string) {
     return this.roomsService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Créer une salle' })
-  @Post()
-  create(@Body() createRoomDto: CreateRoomDto) {
-    return this.roomsService.create(createRoomDto);
-  }
-
-  @ApiOperation({ summary: 'Modifier une salle' })
-  @Patch(':id')
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateRoomDto: UpdateRoomDto,
-  ) {
-    return this.roomsService.update(id, updateRoomDto);
-  }
-
-  @ApiOperation({ summary: 'Supprimer une salle' })
-  @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.roomsService.remove(id);
-  }
-
-  @ApiOperation({ summary: 'Activer/désactiver la maintenance d\'une salle' })
-  @Patch(':id/maintenance')
-  toggleMaintenance(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() toggleMaintenanceDto: ToggleMaintenanceDto,
-  ) {
-    return this.roomsService.toggleMaintenance(
-      id,
-      toggleMaintenanceDto.isUnderMaintenance,
-    );
-  }
-
-  @ApiOperation({ summary: 'Programme d\'une salle entre deux dates' })
+  @ApiOperation({ summary: "Programme d'une salle entre deux dates" })
   @ApiQuery({ name: 'from', required: true, example: '2026-01-01' })
   @ApiQuery({ name: 'to', required: true, example: '2026-12-31' })
   @Get(':id/schedule')
   getSchedule(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Query('from') from: string,
     @Query('to') to: string,
   ) {
@@ -95,5 +67,39 @@ export class RoomsController {
     }
 
     return this.roomsService.getRoomSchedule(id, from, to);
+  }
+
+  @ApiOperation({ summary: 'Créer une salle (admin)' })
+  @UseGuards(AdminGuard)
+  @Post()
+  create(@Body() createRoomDto: CreateRoomDto) {
+    return this.roomsService.create(createRoomDto);
+  }
+
+  @ApiOperation({ summary: 'Modifier une salle (admin)' })
+  @UseGuards(AdminGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
+    return this.roomsService.update(id, updateRoomDto);
+  }
+
+  @ApiOperation({ summary: 'Supprimer une salle (admin)' })
+  @UseGuards(AdminGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.roomsService.remove(id);
+  }
+
+  @ApiOperation({ summary: "Activer/désactiver la maintenance (admin)" })
+  @UseGuards(AdminGuard)
+  @Patch(':id/maintenance')
+  toggleMaintenance(
+    @Param('id') id: string,
+    @Body() toggleMaintenanceDto: ToggleMaintenanceDto,
+  ) {
+    return this.roomsService.toggleMaintenance(
+      id,
+      toggleMaintenanceDto.isUnderMaintenance,
+    );
   }
 }

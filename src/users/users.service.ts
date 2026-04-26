@@ -5,7 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { WalletsService } from '../wallets/wallets.service';
@@ -38,15 +39,20 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
   async create(createUserDto: CreateUserDto) {
-    if ((await this.findByEmail(createUserDto.email)) !== null) {
+    if (await this.findByEmail(createUserDto.email)) {
       throw new ConflictException(
         `User with email ${createUserDto.email} already exists`,
       );
     }
 
-    const user = this.usersRepository.create(createUserDto);
-    const savedUser = await this.usersRepository.save(user);
+    const hash = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hash,
+      role: createUserDto.role ?? UserRole.CLIENT,
+    });
 
+    const savedUser = await this.usersRepository.save(user);
     await this.walletsService.create({ userId: savedUser.id });
 
     return savedUser;
