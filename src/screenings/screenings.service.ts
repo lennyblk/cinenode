@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Not, Repository } from 'typeorm';
+import { FindOptionsWhere, Between, Repository } from 'typeorm';
 import { Screening } from './entities/screening.entity';
 import { CreateScreeningDto } from './dto/create-screening.dto';
 import { UpdateScreeningDto } from './dto/update-screening.dto';
@@ -146,7 +146,7 @@ export class ScreeningsService {
     return this.screeningsRepository.find({
       where: {
         roomId,
-        startsAt: Not(new Date(to)),
+        startsAt: Between(new Date(from), new Date(to)),
       },
       relations: ['movie', 'room'],
       order: { startsAt: 'ASC' },
@@ -157,7 +157,7 @@ export class ScreeningsService {
     return this.screeningsRepository.find({
       where: {
         movieId,
-        startsAt: Not(new Date(to)),
+        startsAt: Between(new Date(from), new Date(to)),
       },
       relations: ['movie', 'room'],
       order: { startsAt: 'ASC' },
