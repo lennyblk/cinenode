@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthDto } from './dto/auth.dto';
+import { SignupDto } from './dto/signup.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { Tokens } from './types';
@@ -71,7 +72,7 @@ export class AuthService {
     return { access_token, refresh_token };
   }
 
-  async signup(dto: AuthDto): Promise<Tokens> {
+  async signup(dto: SignupDto): Promise<Tokens> {
     if ((await this.findByEmail(dto.email)) !== null) {
       throw new ConflictException(
         `User with email ${dto.email} already exists`,
