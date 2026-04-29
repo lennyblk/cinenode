@@ -1,0 +1,3 @@
+cinenode.lennyblk.dev {
+    reverse_proxy app:3636
+}
