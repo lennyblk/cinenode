@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { RefreshToken } from 'src/users/entities/refresh-token.entity';
+import { RefreshToken } from '../users/entities/refresh-token.entity';
 import { Room } from '../rooms/entities/room.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { Screening } from '../screenings/entities/screening.entity';

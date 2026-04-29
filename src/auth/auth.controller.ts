@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { SignupDto } from './dto/signup.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -11,7 +12,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Créer un compte' })
   @Post('/signup')
-  signup(@Body() dto: AuthDto) {
+  signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
   }
 
