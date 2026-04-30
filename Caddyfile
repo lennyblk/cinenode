@@ -1,3 +1,7 @@
 cinenode.lennyblk.dev {
     reverse_proxy app:3636
 }
+
+lennyblk.dev {
+    reverse_proxy portfolio-app:4173
+}

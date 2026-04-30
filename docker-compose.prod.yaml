@@ -1,4 +1,22 @@
 services:
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: node dist/database/seed.js
+    restart: "no"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - internal
+
   app:
     build:
       context: .
@@ -13,6 +31,11 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    networks:
+      - internal
+      - web
 
   mysql:
     image: mysql:8
@@ -29,6 +52,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - internal
 
   caddy:
     image: caddy:2-alpine
@@ -43,8 +68,15 @@ services:
       - caddy_config:/config
     depends_on:
       - app
+    networks:
+      - web
 
 volumes:
   mysql_data:
   caddy_data:
   caddy_config:
+
+networks:
+  internal:
+  web:
+    name: web
