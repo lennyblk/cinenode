@@ -57,7 +57,11 @@ async function seed() {
       }
     }
 
-    const rooms = await roomRepository.save([
+    let rooms = await roomRepository.find();
+    if (rooms.length > 0) {
+      console.log(`✓ Salles déjà existantes (${rooms.length})`);
+    } else {
+    rooms = await roomRepository.save([
       {
         name: 'Salle 1 - Standard',
         description: 'Salle standard 2D avec 100 places',
@@ -159,8 +163,13 @@ async function seed() {
       },
     ]);
     console.log(`✓ ${rooms.length} salles créées`);
+    }
 
-    const movies = await movieRepository.save([
+    let movies = await movieRepository.find();
+    if (movies.length > 0) {
+      console.log(`✓ Films déjà existants (${movies.length})`);
+    } else {
+    movies = await movieRepository.save([
       {
         title: 'Inception',
         synopsis: 'Un voleur qui vole les secrets des rêves doit accomplir une dernière mission.',
@@ -217,7 +226,12 @@ async function seed() {
       },
     ]);
     console.log(`✓ ${movies.length} films créés`);
+    }
 
+    const screeningCount = await screeningRepository.count();
+    if (screeningCount > 0) {
+      console.log(`✓ Séances déjà existantes (${screeningCount})`);
+    } else {
     const screenings: Screening[] = [];
     const today = new Date(2026, 3, 27);
     
@@ -259,6 +273,7 @@ async function seed() {
 
     await screeningRepository.save(screenings);
     console.log(`✓ ${screenings.length} séances créées`);
+    }
 
     console.log('\n✅ Seed data complété avec succès !');
     await AppDataSource.destroy();
