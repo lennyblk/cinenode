@@ -23,6 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: cinenode-app
     restart: unless-stopped
     environment:
       DB_HOST: mysql
@@ -39,7 +40,7 @@ services:
         condition: service_completed_successfully
     networks:
       - internal
-      - web
+      - portfolio_web
 
   mysql:
     image: mysql:8
@@ -59,28 +60,11 @@ services:
     networks:
       - internal
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on:
-      - app
-    networks:
-      - web
-
 volumes:
   mysql_data:
-  caddy_data:
-  caddy_config:
 
 networks:
   internal:
-  web:
-    name: web
+  portfolio_web:
+    external: true
+    name: portfolio_web
