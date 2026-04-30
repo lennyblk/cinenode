@@ -14,7 +14,7 @@ import { WalletsModule } from '../wallets/wallets.module';
   imports: [
     TypeOrmModule.forFeature([User, RefreshToken]),
     JwtModule.register({
-      secret: process.env.JWT_SECRET ?? 'dev_secret',
+      secret: process.env.JWT_AT_SECRET ?? 'dev_at_secret',
       signOptions: { expiresIn: '5m' },
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
