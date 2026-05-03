@@ -64,10 +64,10 @@ async function seed() {
     rooms = await roomRepository.save([
       {
         name: 'Salle 1 - Standard',
-        description: 'Salle standard 2D avec 100 places',
+        description: 'Salle standard 2D',
         images: ['https://example.com/room1.jpg'],
         type: RoomType.STANDARD,
-        capacity: 100,
+        capacity: 20,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
@@ -76,7 +76,7 @@ async function seed() {
         description: 'Écran géant IMAX avec son surround',
         images: ['https://example.com/room2.jpg'],
         type: RoomType.IMAX,
-        capacity: 80,
+        capacity: 30,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
@@ -85,49 +85,49 @@ async function seed() {
         description: 'Technologie 4DX avec mouvements et effets',
         images: ['https://example.com/room3.jpg'],
         type: RoomType.FOUR_DX,
-        capacity: 60,
+        capacity: 25,
         accessibilityEnabled: false,
         isUnderMaintenance: false,
       },
       {
         name: 'Salle 4 - VIP',
-        description: 'Salle VIP avec fauteuils premium et service',
+        description: 'Salle VIP avec fauteuils premium',
         images: ['https://example.com/room4.jpg'],
         type: RoomType.VIP,
-        capacity: 40,
+        capacity: 15,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
       {
-        name: 'Salle 5 - Standard 2D',
-        description: 'Salle standard 2D avec 120 places',
+        name: 'Salle 5 - Standard',
+        description: 'Salle standard 2D',
         images: ['https://example.com/room5.jpg'],
         type: RoomType.STANDARD,
-        capacity: 120,
+        capacity: 28,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
       {
         name: 'Salle 6 - Standard',
-        description: 'Salle standard 2D avec 95 places',
+        description: 'Salle standard 2D',
         images: ['https://example.com/room6.jpg'],
         type: RoomType.STANDARD,
-        capacity: 95,
+        capacity: 22,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
       {
-        name: 'Salle 7 - IMAX Light',
+        name: 'Salle 7 - IMAX',
         description: 'Écran IMAX compact',
         images: ['https://example.com/room7.jpg'],
         type: RoomType.IMAX,
-        capacity: 75,
+        capacity: 18,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
       {
         name: 'Salle 8 - VIP Premium',
-        description: 'Salle VIP premium avec max 30 places',
+        description: 'Salle VIP premium',
         images: ['https://example.com/room8.jpg'],
         type: RoomType.VIP,
         capacity: 30,
@@ -135,11 +135,11 @@ async function seed() {
         isUnderMaintenance: false,
       },
       {
-        name: 'Salle 9 - 4DX Master',
+        name: 'Salle 9 - 4DX',
         description: 'Technologie 4DX avancée',
         images: ['https://example.com/room9.jpg'],
         type: RoomType.FOUR_DX,
-        capacity: 70,
+        capacity: 20,
         accessibilityEnabled: false,
         isUnderMaintenance: false,
       },
@@ -148,16 +148,16 @@ async function seed() {
         description: 'Salle standard adaptée aux enfants',
         images: ['https://example.com/room10.jpg'],
         type: RoomType.STANDARD,
-        capacity: 85,
+        capacity: 25,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
       {
-        name: 'Salle 11 - Événements',
-        description: 'Salle événements avec 150 places',
+        name: 'Salle 11 - Standard',
+        description: 'Salle standard 2D',
         images: ['https://example.com/room11.jpg'],
         type: RoomType.STANDARD,
-        capacity: 150,
+        capacity: 16,
         accessibilityEnabled: true,
         isUnderMaintenance: false,
       },
@@ -232,42 +232,48 @@ async function seed() {
     if (screeningCount > 0) {
       console.log(`✓ Séances déjà existantes (${screeningCount})`);
     } else {
-    const screenings: Screening[] = [];
-    const today = new Date(2026, 3, 27);
-    
-    for (let dayOffset = 0; dayOffset < 31; dayOffset++) {
+    const screenings: Partial<Screening>[] = [];
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Créneaux horaires garantis de finir avant 20h00 même pour le film le plus long (169+30=199min)
+    // 9:00+199min=12:19 ✓  12:30+199min=15:49 ✓  16:30+199min=19:49 ✓
+    const timings = [
+      { hour: 9, minute: 0 },
+      { hour: 12, minute: 30 },
+      { hour: 16, minute: 30 },
+    ];
+
+    for (let dayOffset = 0; dayOffset < 35; dayOffset++) {
       const date = new Date(today);
       date.setDate(date.getDate() + dayOffset);
 
-      // Ignorer les weekends (samedi=6, dimanche=0)
       if (date.getDay() === 0 || date.getDay() === 6) continue;
 
-      // 3 séances par jour : 14:00, 17:00, 20:00
-      const timings = [14, 17, 20];
-      
-      for (let timing of timings) {
-        const room = rooms[Math.floor(Math.random() * rooms.length)];
-        const movie = movies[Math.floor(Math.random() * movies.length)];
+      // Rooms et movies mélangés différemment chaque jour
+      // → 3 rooms distincts + 3 movies distincts par jour → pas de chevauchement possible
+      const shuffledRooms = [...rooms].sort(() => Math.random() - 0.5);
+      const shuffledMovies = [...movies].sort(() => Math.random() - 0.5);
+
+      for (let i = 0; i < timings.length; i++) {
+        const room = shuffledRooms[i];
+        const movie = shuffledMovies[i];
+        const { hour, minute } = timings[i];
 
         const startsAt = new Date(date);
-        startsAt.setHours(timing, 0, 0, 0);
+        startsAt.setHours(hour, minute, 0, 0);
 
         const endsAt = new Date(startsAt);
         endsAt.setMinutes(endsAt.getMinutes() + movie.durationMinutes + 30);
 
         screenings.push({
-          id: undefined,
           roomId: room.id,
-          room,
           movieId: movie.id,
-          movie,
           startsAt,
           endsAt,
           isCancelled: false,
-          tickets: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as any);
+        });
       }
     }
 
