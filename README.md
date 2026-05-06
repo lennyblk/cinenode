@@ -30,7 +30,34 @@ RESTful API de gestion de cinéma, construite avec **NestJS** et **TypeScript**.
 
 ---
 
-## Démarrage (développement)
+## Accès à la version de production
+
+L'API est déployée et accessible publiquement :
+
+| Service | URL |
+| ------- | --- |
+| Swagger / Documentation | `https://cinenode.lennyblk.dev/api` |
+| API     | `https://cinenode.lennyblk.dev`     |
+
+**Compte administrateur pré-configuré :**
+
+| Champ    | Valeur            |
+| -------- | ----------------- |
+| Email    | `admin@admin.com` |
+| Mot de passe | `Admin123!`   |
+
+Procédure pour tester via Swagger :
+1. Aller sur `https://cinenode.lennyblk.dev/api`
+2. Utiliser `POST /auth/signin` avec les credentials admin ci-dessus
+3. Copier le `access_token` retourné
+4. Cliquer sur **Authorize** (bouton en haut à droite du Swagger)
+5. Coller le token → toutes les routes sont débloquées
+
+---
+
+## Démarrage en local
+
+### Avec les données exportées (recommandé)
 
 ```bash
 git clone https://github.com/lennyblk/cinenode.git
@@ -41,7 +68,25 @@ cp .env.example .env
 # Lance MySQL + phpMyAdmin
 docker compose -f docker-compose.dev.yaml up -d
 
+# Importe les données
+docker exec -i cinenode-mysql-1 mysql -u cinenode -pcinenode cinenode < cinenode_export.sql
+
 pnpm install
+pnpm run start:dev
+```
+
+### Sans données (seed automatique)
+
+```bash
+git clone https://github.com/lennyblk/cinenode.git
+cd cinenode
+
+cp .env.example .env
+
+docker compose -f docker-compose.dev.yaml up -d
+
+pnpm install
+pnpm run seed        # insère admin, salles, films, séances
 pnpm run start:dev
 ```
 
