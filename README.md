@@ -1,34 +1,36 @@
 # CineNode
 
-RESTful API for cinema management, built with **NestJS** and **TypeScript**.
+RESTful API de gestion de cinéma, construite avec **NestJS** et **TypeScript**.
 
 ---
 
 ## Tech Stack
 
-| Category         | Technology                              |
-| ---------------- | --------------------------------------- |
-| Framework        | NestJS (Node.js)                        |
-| Language         | TypeScript                              |
-| Database         | MySql                                   |
-| ORM              | TypeORM                                 |
-| Auth             | JWT (access token 5min + refresh token) |
-| Validation       | class-validator + class-transformer     |
-| Documentation    | Swagger / OpenAPI                       |
-| Containerization | Docker + Docker Compose                 |
-| Observability    | Prometheus + Grafana                    |
-| CI/CD            | GitHub Actions                          |
+| Catégorie        | Technologie                                         |
+| ---------------- | --------------------------------------------------- |
+| Framework        | NestJS (Node.js)                                    |
+| Langage          | TypeScript                                          |
+| Base de données  | MySQL 8                                             |
+| ORM              | TypeORM                                             |
+| Auth             | JWT stateful (access token 5min + refresh token 7j) |
+| Validation       | class-validator + class-transformer                 |
+| Documentation    | Swagger / OpenAPI                                   |
+| Conteneurisation | Docker + Docker Compose                             |
+| Reverse proxy    | Caddy (HTTPS automatique)                           |
+| CI/CD            | GitHub Actions                                      |
 
 ---
 
-## Prerequisites
+## Production
 
-- [Node.js](https://nodejs.org) >= 20
-- [Docker](https://docker.com) + Docker Compose
+| Service | URL                                 |
+| ------- | ----------------------------------- |
+| API     | `https://cinenode.lennyblk.dev`     |
+| Swagger | `https://cinenode.lennyblk.dev/api` |
 
 ---
 
-## Getting started (development)
+## Démarrage (développement)
 
 ```bash
 git clone https://github.com/lennyblk/cinenode.git
@@ -36,193 +38,180 @@ cd cinenode
 
 cp .env.example .env
 
-docker compose -f docker-compose.dev.yml up -d
+# Lance MySQL + phpMyAdmin
+docker compose -f docker-compose.dev.yaml up -d
 
-npm install
-npm run start:dev
+pnpm install
+pnpm run start:dev
 ```
 
-| Service | URL                         |
-| ------- | --------------------------- |
-| API     | `http://localhost:3000`     |
-| Swagger | `http://localhost:3000/api` |
+| Service    | URL                         |
+| ---------- | --------------------------- |
+| API        | `http://localhost:3636`     |
+| Swagger    | `http://localhost:3636/api` |
+| phpMyAdmin | `http://localhost:8080`     |
 
 ---
 
-## Production
-
-```bash
-docker compose -f docker-compose.prod.yml up -d
-```
-
-> The production image contains only compiled JavaScript. TypeScript is not present in the prod image.
-
----
-
-## Environment variables
-
-Copy `.env.example` and fill in the values:
+## Variables d'environnement
 
 ```env
-# Database
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_NAME=cinenode
-DATABASE_USER=cinenode
-DATABASE_PASSWORD=cinenode
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=cinenode
+DB_USER=cinenode
+DB_PASSWORD=cinenode
 
-# JWT
-JWT_SECRET=
-JWT_REFRESH_SECRET=
-JWT_ACCESS_EXPIRES_IN=5m
-JWT_REFRESH_EXPIRES_IN=7d
+JWT_AT_SECRET=
+JWT_RT_SECRET=
 
-# App
-PORT=3000
-NODE_ENV=development
+PORT=3636
 ```
 
 ---
 
-## Project structure
+## Données de seed
 
-```
-src/
-├── auth/
-│   ├── auth.module.ts
-│   ├── auth.controller.ts
-│   ├── auth.service.ts
-│   ├── guards/
-│   │   ├── jwt-auth.guard.ts
-│   │   └── roles.guard.ts
-│   └── dto/
-├── rooms/
-│   ├── rooms.module.ts
-│   ├── rooms.controller.ts
-│   ├── rooms.service.ts
-│   └── dto/
-├── movies/
-│   ├── movies.module.ts
-│   ├── movies.controller.ts
-│   ├── movies.service.ts
-│   └── dto/
-├── screenings/
-│   ├── screenings.module.ts
-│   ├── screenings.controller.ts
-│   ├── screenings.service.ts
-│   └── dto/
-├── tickets/
-│   ├── tickets.module.ts
-│   ├── tickets.controller.ts
-│   ├── tickets.service.ts
-│   └── dto/
-├── wallet/
-│   ├── wallet.module.ts
-│   ├── wallet.controller.ts
-│   └── wallet.service.ts
-├── users/
-│   ├── users.module.ts
-│   ├── users.controller.ts
-│   └── users.service.ts
-├── stats/
-│   ├── stats.module.ts
-│   ├── stats.controller.ts
-│   └── stats.service.ts
-├── database/
-│   └── database.module.ts
-├── app.module.ts
-└── main.ts
-```
+Au premier lancement, les données suivantes sont insérées automatiquement :
+
+| Donnée  | Détail                                        |
+| ------- | --------------------------------------------- |
+| Admin   | `admin@admin.com` / `Admin123!`               |
+| Salles  | 10 salles variées (Standard, IMAX, 4DX, VIP)  |
+| Films   | Plusieurs films avec durées, genres, affiches |
+| Séances | Planifiées sur +1 mois à l'avance             |
 
 ---
 
-## API Routes
-
-> Full documentation available at `/api` (Swagger).
+## Routes API
 
 ### Auth
 
-| Method | Route            | Description                   | Access        |
-| ------ | ---------------- | ----------------------------- | ------------- |
-| POST   | `/auth/register` | Create an account             | Public        |
-| POST   | `/auth/login`    | Sign in                       | Public        |
-| POST   | `/auth/logout`   | Sign out (deletes all tokens) | Authenticated |
-| POST   | `/auth/refresh`  | Refresh access token          | Authenticated |
+| Méthode | Route           | Description                         | Accès       |
+| ------- | --------------- | ----------------------------------- | ----------- |
+| POST    | `/auth/signup`  | Créer un compte                     | Public      |
+| POST    | `/auth/signin`  | Se connecter                        | Public      |
+| POST    | `/auth/logout`  | Se déconnecter (révoque les tokens) | Authentifié |
+| POST    | `/auth/refresh` | Rafraîchir l'access token           | Authentifié |
 
-### Rooms
+### Salles
 
-| Method | Route                    | Description                  | Access        |
-| ------ | ------------------------ | ---------------------------- | ------------- |
-| GET    | `/rooms`                 | List all rooms               | Authenticated |
-| POST   | `/rooms`                 | Create a room                | Admin         |
-| PATCH  | `/rooms/:id`             | Update a room                | Admin         |
-| DELETE | `/rooms/:id`             | Delete a room                | Admin         |
-| PATCH  | `/rooms/:id/maintenance` | Toggle maintenance mode      | Admin         |
-| GET    | `/rooms/:id/schedule`    | Room schedule (`?from=&to=`) | Authenticated |
+| Méthode | Route                    | Description                         | Accès       |
+| ------- | ------------------------ | ----------------------------------- | ----------- |
+| GET     | `/rooms`                 | Lister toutes les salles            | Authentifié |
+| GET     | `/rooms/:id`             | Détail d'une salle                  | Authentifié |
+| GET     | `/rooms/:id/schedule`    | Planning d'une salle (`?from=&to=`) | Authentifié |
+| POST    | `/rooms`                 | Créer une salle                     | Admin       |
+| PATCH   | `/rooms/:id`             | Modifier une salle                  | Admin       |
+| PATCH   | `/rooms/:id/maintenance` | Activer/désactiver la maintenance   | Admin       |
+| DELETE  | `/rooms/:id`             | Supprimer une salle                 | Admin       |
 
-### Movies
+### Films
 
-| Method | Route                  | Description                   | Access        |
-| ------ | ---------------------- | ----------------------------- | ------------- |
-| GET    | `/movies`              | List all movies               | Authenticated |
-| POST   | `/movies`              | Create a movie                | Admin         |
-| PATCH  | `/movies/:id`          | Update a movie                | Admin         |
-| DELETE | `/movies/:id`          | Delete a movie                | Admin         |
-| GET    | `/movies/:id/schedule` | Movie schedule (`?from=&to=`) | Authenticated |
+| Méthode | Route                  | Description                      | Accès       |
+| ------- | ---------------------- | -------------------------------- | ----------- |
+| GET     | `/movies`              | Lister tous les films            | Authentifié |
+| GET     | `/movies/:id`          | Détail d'un film                 | Authentifié |
+| GET     | `/movies/:id/schedule` | Séances d'un film (`?from=&to=`) | Authentifié |
+| POST    | `/movies`              | Créer un film                    | Admin       |
+| PATCH   | `/movies/:id`          | Modifier un film                 | Admin       |
+| DELETE  | `/movies/:id`          | Supprimer un film                | Admin       |
 
-### Screenings
+### Séances
 
-| Method | Route             | Description                    | Access        |
-| ------ | ----------------- | ------------------------------ | ------------- |
-| GET    | `/screenings`     | Global schedule (`?from=&to=`) | Authenticated |
-| POST   | `/screenings`     | Create a screening             | Admin         |
-| PATCH  | `/screenings/:id` | Update a screening             | Admin         |
-| DELETE | `/screenings/:id` | Delete a screening             | Admin         |
+| Méthode | Route             | Description                                        | Accès       |
+| ------- | ----------------- | -------------------------------------------------- | ----------- |
+| GET     | `/screenings`     | Planning global (`?from=&to=`)                     | Authentifié |
+| GET     | `/screenings/:id` | Détail d'une séance (billets vendus, places dispo) | Authentifié |
+| POST    | `/screenings`     | Créer une séance                                   | Admin       |
+| PATCH   | `/screenings/:id` | Modifier une séance                                | Admin       |
+| DELETE  | `/screenings/:id` | Supprimer une séance                               | Admin       |
 
-### Tickets
+### Billets
 
-| Method | Route                | Description                          | Access        |
-| ------ | -------------------- | ------------------------------------ | ------------- |
-| POST   | `/tickets/buy`       | Buy a single ticket                  | Authenticated |
-| POST   | `/tickets/buy-super` | Buy a super ticket (x10 sessions)    | Authenticated |
-| GET    | `/tickets/mine`      | My tickets and associated screenings | Authenticated |
+| Méthode | Route                           | Description                              | Accès       |
+| ------- | ------------------------------- | ---------------------------------------- | ----------- |
+| GET     | `/tickets`                      | Tous les billets                         | Admin       |
+| GET     | `/tickets/:id`                  | Détail d'un billet                       | Authentifié |
+| GET     | `/tickets/user/:userId`         | Billets d'un utilisateur                 | Authentifié |
+| GET     | `/tickets/user/:userId/history` | Historique billets utilisés + séances    | Authentifié |
+| GET     | `/tickets/screening/:id/count`  | Nombre de billets vendus pour une séance | Authentifié |
+| POST    | `/tickets/user/:userId/buy`     | Acheter un billet (classique ou super)   | Authentifié |
+| POST    | `/tickets/:id/use`              | Utiliser un billet pour une séance       | Authentifié |
+| POST    | `/tickets/:id/link-screening`   | Lier un super billet à une séance        | Authentifié |
+| DELETE  | `/tickets/:id`                  | Supprimer un billet                      | Admin       |
 
-### Wallet
+### Portefeuilles
 
-| Method | Route              | Description                     | Access        |
-| ------ | ------------------ | ------------------------------- | ------------- |
-| GET    | `/wallet`          | Balance and transaction history | Authenticated |
-| POST   | `/wallet/deposit`  | Add funds                       | Authenticated |
-| POST   | `/wallet/withdraw` | Withdraw funds                  | Authenticated |
+| Méthode | Route                       | Description                     | Accès       |
+| ------- | --------------------------- | ------------------------------- | ----------- |
+| GET     | `/wallets`                  | Tous les wallets + transactions | Admin       |
+| GET     | `/wallets/:id`              | Détail d'un wallet              | Authentifié |
+| GET     | `/wallets/user/:userId`     | Wallet d'un utilisateur         | Authentifié |
+| GET     | `/wallets/:id/transactions` | Historique des transactions     | Authentifié |
+| POST    | `/wallets/:id/deposit`      | Déposer de l'argent             | Authentifié |
+| POST    | `/wallets/:id/withdraw`     | Retirer de l'argent             | Authentifié |
+| DELETE  | `/wallets/:id`              | Supprimer un wallet             | Admin       |
 
-### Stats (Admin)
+### Utilisateurs
 
-| Method | Route                      | Description                     | Access |
-| ------ | -------------------------- | ------------------------------- | ------ |
-| GET    | `/stats/attendance`        | Attendance stats (`?from=&to=`) | Admin  |
-| GET    | `/stats/attendance/daily`  | Daily attendance                | Admin  |
-| GET    | `/stats/attendance/weekly` | Weekly attendance               | Admin  |
-| GET    | `/stats/live`              | Real-time occupancy rates       | Admin  |
+| Méthode | Route        | Description                  | Accès |
+| ------- | ------------ | ---------------------------- | ----- |
+| GET     | `/users`     | Lister tous les utilisateurs | Admin |
+| GET     | `/users/:id` | Détail d'un utilisateur      | Admin |
+| POST    | `/users`     | Créer un utilisateur         | Admin |
+| PATCH   | `/users/:id` | Modifier un utilisateur      | Admin |
+| DELETE  | `/users/:id` | Supprimer un utilisateur     | Admin |
+
+---
+
+## Ce qui est fait / pas fait
+
+### Fait
+
+- [x] Gestion des salles : CRUD complet, contrainte capacité 15-30 places, maintenance, planning par période
+- [x] Gestion des films : CRUD complet, planning d'un film par période
+- [x] Gestion des séances : CRUD complet, contrainte lundi-vendredi 9h-20h, durée min = film + 30 min, anti-chevauchement salle et film, billets vendus / places disponibles par séance
+- [x] Authentification stateful : access token 5 min + refresh token 7 jours stockés en base, révocation au logout
+- [x] Rôles : client / admin
+- [x] Billets classiques (1 séance) et Super Billets (10 séances)
+- [x] Portefeuille : dépôt, retrait, historique daté des transactions
+- [x] Vérification solde insuffisant et salle complète à l'achat
+- [x] Historique des billets utilisés avec séances associées
+- [x] Admin : liste des utilisateurs, liste de toutes les transactions
+- [x] Seed automatique : admin, 10+ salles, films, séances planifiées +1 mois
+- [x] Swagger / OpenAPI complet
+- [x] Docker multi-stage (build TypeScript → image JS uniquement en prod)
+- [x] Déploiement en production avec HTTPS via Caddy
+- [x] CI/CD GitHub Actions : tests avant chaque déploiement
+- [x] Tests unitaires (auth, rooms, movies, screenings, wallets, tickets)
+
+### Pas fait
+
+- [ ] Statistiques de fréquentation (quotidien, hebdomadaire, temps réel)
+- [ ] Activité détaillée d'un utilisateur pour l'admin (films vus, billets, dépenses)
+- [ ] Rôle super_admin et planning des employés
+- [ ] Observabilité (Prometheus, Grafana)
+- [ ] Logs structurés JSON (Winston/Pino)
+- [ ] Gestion des race conditions (SELECT FOR UPDATE)
+- [ ] Backup de la base de données
 
 ---
 
 ## Scripts
 
 ```bash
-npm run start:dev      # Development with hot reload
-npm run build          # Compile TypeScript to JavaScript
-npm run start:prod     # Run the compiled build
-npm run lint           # ESLint
-npm run test           # Unit tests
-npm run test:e2e       # End-to-end tests
+pnpm run start:dev   # Développement avec hot reload
+pnpm run build       # Compilation TypeScript → JavaScript
+pnpm run lint        # ESLint
+pnpm run test        # Tests unitaires
+pnpm run seed        # Insérer les données de seed
 ```
 
 ---
 
-## Authors
+## Auteurs
 
-Sarah GARCIA
-Lenny BLACKETT
-Malo LAVAL
+Sarah GARCIA · Lenny BLACKETT · Malo LAVAL
 
-Project built as part of the [**ESGI**](https://www.esgi.fr/) curriculum.
+Projet réalisé dans le cadre du cursus [**ESGI**](https://www.esgi.fr/).
