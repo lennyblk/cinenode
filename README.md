@@ -210,39 +210,6 @@ Au premier lancement, les données suivantes sont insérées automatiquement :
 
 ---
 
-## Ce qui est fait / pas fait
-
-### Fait
-
-- [x] Gestion des salles : CRUD complet, contrainte capacité 15-30 places, maintenance, planning par période
-- [x] Gestion des films : CRUD complet, planning d'un film par période
-- [x] Gestion des séances : CRUD complet, contrainte lundi-vendredi 9h-20h, durée min = film + 30 min, anti-chevauchement salle et film, billets vendus / places disponibles par séance
-- [x] Authentification stateful : access token 5 min + refresh token 7 jours stockés en base, révocation au logout
-- [x] Rôles : client / admin
-- [x] Billets classiques (1 séance) et Super Billets (10 séances)
-- [x] Portefeuille : dépôt, retrait, historique daté des transactions
-- [x] Vérification solde insuffisant et salle complète à l'achat
-- [x] Historique des billets utilisés avec séances associées
-- [x] Admin : liste des utilisateurs, liste de toutes les transactions
-- [x] Seed automatique : admin, 10+ salles, films, séances planifiées +1 mois
-- [x] Swagger / OpenAPI complet
-- [x] Docker multi-stage (build TypeScript → image JS uniquement en prod)
-- [x] Déploiement en production avec HTTPS via Caddy
-- [x] CI/CD GitHub Actions : tests avant chaque déploiement
-- [x] Tests unitaires (auth, rooms, movies, screenings, wallets, tickets)
-
-### Pas fait
-
-- [ ] Statistiques de fréquentation (quotidien, hebdomadaire, temps réel)
-- [ ] Activité détaillée d'un utilisateur pour l'admin (films vus, billets, dépenses)
-- [ ] Rôle super_admin et planning des employés
-- [ ] Observabilité (Prometheus, Grafana)
-- [ ] Logs structurés JSON (Winston/Pino)
-- [ ] Gestion des race conditions (SELECT FOR UPDATE)
-- [ ] Backup de la base de données
-
----
-
 ## Scripts
 
 ```bash
